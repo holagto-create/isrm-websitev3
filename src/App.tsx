@@ -1733,6 +1733,17 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
 
+  // Check for saved URS session on load
+  useEffect(() => {
+    const savedURSName = sessionStorage.getItem('ursName');
+    const savedURSAuth = sessionStorage.getItem('ursAuthenticated');
+    if (savedURSName && savedURSAuth === 'true') {
+      setURSName(savedURSName);
+      setURSAuthenticated(true);
+      setCurrentPage('urs-portal');
+    }
+  }, []);
+
   const CORRECT_PASSWORD = 'ISRM2026'; // Change this to your desired password
 
   const handleLogin = () => {
@@ -1746,6 +1757,9 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    // Clear URS session
+    sessionStorage.removeItem('ursName');
+    sessionStorage.removeItem('ursAuthenticated');
     setIsAuthenticated(false);
     setURSAuthenticated(false);
     setURSName('');
@@ -1826,6 +1840,9 @@ export default function App() {
           onLogin={(name) => {
             setURSName(name);
             setURSAuthenticated(true);
+            // Save to session storage
+            sessionStorage.setItem('ursName', name);
+            sessionStorage.setItem('ursAuthenticated', 'true');
           }} 
         />
       )}
