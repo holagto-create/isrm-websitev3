@@ -1347,14 +1347,16 @@ function PersonnelPage() {
 }
 
 // ============================================================================
-// DASHBOARD PAGE (PRIVATE) - Full Officer Dashboard
+// DASHBOARD PAGE (PRIVATE) - Full Officer Dashboard with Sidebar
 // ============================================================================
 function DashboardPage({ onLogout }: { onLogout: () => void }) {
   const [clients, setClients] = useState<any[]>([]);
+  const [ursList, setUrsList] = useState<any[]>([]);
   const [financial, setFinancial] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
+  const [activeSection, setActiveSection] = useState('dashboard');
 
   useEffect(() => {
     loadDashboardData();
@@ -1365,6 +1367,7 @@ function DashboardPage({ onLogout }: { onLogout: () => void }) {
     try {
       const data = await getDashboardData();
       setClients(data.clients || []);
+      setUrsList(data.urs || []);
       setFinancial(data.financial || {});
     } catch (err: any) {
       setError(err.message || 'Failed to load dashboard data');
@@ -1386,6 +1389,14 @@ function DashboardPage({ onLogout }: { onLogout: () => void }) {
     }
   };
 
+  const menuItems = [
+    { id: 'dashboard', label: '📊 Dashboard', icon: '📊' },
+    { id: 'clients', label: '📋 Clients', icon: '📋' },
+    { id: 'financial', label: '💰 Financial', icon: '💰' },
+    { id: 'urs', label: '👥 URS Registry', icon: '👥' },
+    { id: 'reports', label: '📄 Reports', icon: '📄' },
+  ];
+
   if (loading) {
     return (
       <div className="pt-24 pb-16 min-h-screen flex items-center justify-center">
@@ -1398,133 +1409,248 @@ function DashboardPage({ onLogout }: { onLogout: () => void }) {
   }
 
   return (
-    <div className="pt-24 pb-16 bg-slate-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-navy font-playfair">ISRM Officer's Command Center</h1>
-            <p className="text-slate-500">Live dashboard with Google Sheets data</p>
-          </div>
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all"
-          >
-            <Lock size={16} /> Logout
-          </button>
+    <div className="pt-20 min-h-screen bg-slate-50">
+      {/* Header */}
+      <div className="bg-navy text-white px-6 py-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold">ISRM Officer's Command Center</h1>
+          <p className="text-blue-200 text-sm">Saint Louis University - RISE Center</p>
+        </div>
+        <button
+          onClick={onLogout}
+          className="flex items-center gap-2 px-4 py-2 bg-navy-light text-white rounded-lg hover:bg-navy/80 transition-all"
+        >
+          <Lock size={16} /> Logout
+        </button>
+      </div>
+
+      <div className="flex">
+        {/* Sidebar */}
+        <div className="w-64 bg-white border-r border-slate-200 min-h-screen">
+          <nav className="p-4">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={`w-full text-left px-4 py-3 rounded-lg mb-2 flex items-center gap-3 transition-all ${
+                  activeSection === item.id
+                    ? 'bg-navy text-white'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span className="font-medium">{item.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="p-5 text-center">
-            <div className="text-3xl font-bold text-navy">{financial.totalCount || 0}</div>
-            <div className="text-xs text-slate-500 uppercase mt-1">Total Clients</div>
-          </Card>
-          <Card className="p-5 text-center">
-            <div className="text-3xl font-bold text-emerald-600">{financial.paidCount || 0}</div>
-            <div className="text-xs text-slate-500 uppercase mt-1">Paid</div>
-          </Card>
-          <Card className="p-5 text-center">
-            <div className="text-3xl font-bold text-amber-600">{financial.pendingCount || 0}</div>
-            <div className="text-xs text-slate-500 uppercase mt-1">Pending</div>
-          </Card>
-          <Card className="p-5 text-center">
-            <div className="text-3xl font-bold text-gold">₱{(financial.grossFees || 0).toLocaleString()}</div>
-            <div className="text-xs text-slate-500 uppercase mt-1">Total Revenue</div>
-          </Card>
-        </div>
+        {/* Main Content */}
+        <div className="flex-1 p-6">
+          {activeSection === 'dashboard' && (
+            <>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <Card className="p-5 text-center">
+                  <div className="text-3xl font-bold text-navy">{financial.totalCount || 0}</div>
+                  <div className="text-xs text-slate-500 uppercase mt-1">Total Clients</div>
+                </Card>
+                <Card className="p-5 text-center">
+                  <div className="text-3xl font-bold text-emerald-600">{financial.paidCount || 0}</div>
+                  <div className="text-xs text-slate-500 uppercase mt-1">Paid</div>
+                </Card>
+                <Card className="p-5 text-center">
+                  <div className="text-3xl font-bold text-amber-600">{financial.pendingCount || 0}</div>
+                  <div className="text-xs text-slate-500 uppercase mt-1">Pending</div>
+                </Card>
+                <Card className="p-5 text-center">
+                  <div className="text-3xl font-bold text-gold">₱{(financial.grossFees || 0).toLocaleString()}</div>
+                  <div className="text-xs text-slate-500 uppercase mt-1">Total Revenue</div>
+                </Card>
+              </div>
 
-        {/* Financial Summary */}
-        <Card className="p-6 mb-8">
-          <h2 className="text-lg font-bold text-navy font-playfair mb-4">💰 Financial Summary (60/40 Split)</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-slate-50 rounded-lg">
-              <div className="text-2xl font-bold text-navy">₱{(financial.grossFees || 0).toLocaleString()}</div>
-              <div className="text-xs text-slate-500">Gross Fees</div>
-            </div>
-            <div className="text-center p-4 bg-gold/10 rounded-lg">
-              <div className="text-2xl font-bold text-gold">₱{(financial.ursHonoraria || 0).toLocaleString()}</div>
-              <div className="text-xs text-slate-500">URS Honoraria (60%)</div>
-            </div>
-            <div className="text-center p-4 bg-navy/10 rounded-lg">
-              <div className="text-2xl font-bold text-navy">₱{(financial.unitShare || 0).toLocaleString()}</div>
-              <div className="text-xs text-slate-500">Unit Share (40%)</div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Filter */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {['all', 'New', 'In Progress', 'Completed'].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                filter === f 
-                  ? 'bg-navy text-white' 
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {f === 'all' ? 'All' : f}
-            </button>
-          ))}
-        </div>
-
-        {/* Clients Table */}
-        <Card className="overflow-hidden">
-          <div className="bg-navy px-6 py-4">
-            <h2 className="text-white font-bold text-lg font-playfair">Client Records</h2>
-          </div>
-
-          {filteredClients.length === 0 ? (
-            <div className="p-12 text-center text-slate-400">
-              <Users size={48} className="mx-auto mb-4 opacity-40" />
-              <p>No clients found.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Record ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Client</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Research</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Service</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Fee</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Payment</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Assigned URS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredClients.slice(0, 50).map((client: any, idx: number) => (
-                    <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="px-4 py-3 text-sm font-medium text-navy">{client['Record ID'] || '-'}</td>
-                      <td className="px-4 py-3 text-sm text-slate-600">{client['Date'] || '-'}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <div className="font-medium text-navy">{client['Client Name'] || '-'}</div>
-                        <div className="text-xs text-slate-400">{client['Email'] || '-'}</div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{client['Research Title'] || '-'}</td>
-                      <td className="px-4 py-3 text-sm text-slate-600">{client['Service Type'] || '-'}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-gold">₱{parseFloat(client['Total Fee (₱)'] || 0).toLocaleString()}</td>
-                      <td className={`px-4 py-3 text-sm font-medium ${client['Payment Status'] === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                        {client['Payment Status'] || '-'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(client['Status'])}`}>
-                          {client['Status'] || 'New'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">{client['Assigned URS'] || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-6">
+                  <h3 className="font-bold text-navy mb-4">By Status</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between"><span className="text-slate-600">New</span><span className="font-bold text-blue-600">{financial.newCount || 0}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-600">In Progress</span><span className="font-bold text-amber-600">{financial.inProgressCount || 0}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-600">Completed</span><span className="font-bold text-emerald-600">{financial.completedCount || 0}</span></div>
+                  </div>
+                </Card>
+                <Card className="p-6">
+                  <h3 className="font-bold text-navy mb-4">💰 Financial Split (60/40)</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between"><span className="text-slate-600">Gross Fees</span><span className="font-bold text-navy">₱{(financial.grossFees || 0).toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-600">URS (60%)</span><span className="font-bold text-gold">₱{(financial.ursHonoraria || 0).toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-600">Unit (40%)</span><span className="font-bold text-navy">₱{(financial.unitShare || 0).toLocaleString()}</span></div>
+                  </div>
+                </Card>
+                <Card className="p-6">
+                  <h3 className="font-bold text-navy mb-4">📊 Quick Actions</h3>
+                  <div className="space-y-2">
+                    <button onClick={() => setActiveSection('clients')} className="w-full text-left px-3 py-2 bg-slate-100 rounded hover:bg-slate-200 text-sm">View All Clients</button>
+                    <button onClick={() => setActiveSection('reports')} className="w-full text-left px-3 py-2 bg-slate-100 rounded hover:bg-slate-200 text-sm">Generate Reports</button>
+                    <button onClick={() => setActiveSection('urs')} className="w-full text-left px-3 py-2 bg-slate-100 rounded hover:bg-slate-200 text-sm">Manage URS</button>
+                  </div>
+                </Card>
+              </div>
+            </>
           )}
-        </Card>
+
+          {activeSection === 'clients' && (
+            <>
+              {/* Filter */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {['all', 'New', 'In Progress', 'Completed'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      filter === f 
+                        ? 'bg-navy text-white' 
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {f === 'all' ? 'All' : f}
+                  </button>
+                ))}
+              </div>
+
+              {/* Clients Table */}
+              <Card className="overflow-hidden">
+                <div className="bg-navy px-6 py-4">
+                  <h2 className="text-white font-bold text-lg">Client Records ({filteredClients.length})</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Record ID</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Client</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Research</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Service</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Fee</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Payment</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">URS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredClients.slice(0, 50).map((client: any, idx: number) => (
+                        <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
+                          <td className="px-4 py-3 text-sm font-medium text-navy">{client['Record ID'] || '-'}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <div className="font-medium text-navy">{client['Client Name'] || '-'}</div>
+                            <div className="text-xs text-slate-400">{client['Email'] || '-'}</div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{client['Research Title'] || '-'}</td>
+                          <td className="px-4 py-3 text-sm text-slate-600">{client['Service Type'] || '-'}</td>
+                          <td className="px-4 py-3 text-sm font-medium text-gold">₱{parseFloat(client['Total Fee (₱)'] || 0).toLocaleString()}</td>
+                          <td className={`px-4 py-3 text-sm font-medium ${client['Payment Status'] === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                            {client['Payment Status'] || '-'}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(client['Status'])}`}>
+                              {client['Status'] || 'New'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-slate-600">{client['Assigned URS'] || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </>
+          )}
+
+          {activeSection === 'financial' && (
+            <Card className="p-6">
+              <h2 className="text-xl font-bold text-navy mb-6">💰 Financial Summary</h2>
+              <div className="grid grid-cols-3 gap-6 mb-8">
+                <div className="text-center p-6 bg-slate-50 rounded-lg">
+                  <div className="text-3xl font-bold text-navy mb-2">₱{(financial.grossFees || 0).toLocaleString()}</div>
+                  <div className="text-slate-500">Gross Fees (100%)</div>
+                </div>
+                <div className="text-center p-6 bg-gold/10 rounded-lg">
+                  <div className="text-3xl font-bold text-gold mb-2">₱{(financial.ursHonoraria || 0).toLocaleString()}</div>
+                  <div className="text-slate-500">URS Honoraria (60%)</div>
+                </div>
+                <div className="text-center p-6 bg-navy/10 rounded-lg">
+                  <div className="text-3xl font-bold text-navy mb-2">₱{(financial.unitShare || 0).toLocaleString()}</div>
+                  <div className="text-slate-500">Unit Share (40%)</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 border border-slate-200 rounded-lg">
+                  <div className="text-slate-500 text-sm mb-1">Paid Clients</div>
+                  <div className="text-2xl font-bold text-emerald-600">{financial.paidCount || 0}</div>
+                </div>
+                <div className="p-4 border border-slate-200 rounded-lg">
+                  <div className="text-slate-500 text-sm mb-1">Pending Payment</div>
+                  <div className="text-2xl font-bold text-amber-600">{financial.pendingCount || 0}</div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {activeSection === 'urs' && (
+            <Card className="p-6">
+              <h2 className="text-xl font-bold text-navy mb-6">👥 URS Registry</h2>
+              {ursList.length === 0 ? (
+                <p className="text-slate-400">No URS found in registry.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">URS ID</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Full Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Department</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Email</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ursList.map((urs: any, idx: number) => (
+                        <tr key={idx} className="border-b border-slate-100">
+                          <td className="px-4 py-3 text-sm text-slate-600">{urs['URS ID'] || '-'}</td>
+                          <td className="px-4 py-3 text-sm font-medium text-navy">{urs['Full Name'] || '-'}</td>
+                          <td className="px-4 py-3 text-sm text-slate-600">{urs['Department'] || '-'}</td>
+                          <td className="px-4 py-3 text-sm text-slate-600">{urs['Email'] || '-'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${urs['Status'] === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
+                              {urs['Status'] || '-'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {activeSection === 'reports' && (
+            <Card className="p-6">
+              <h2 className="text-xl font-bold text-navy mb-6">📄 Reports</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                  <h3 className="font-bold text-navy mb-2">FM-RIS-059 Semestral Report</h3>
+                  <p className="text-sm text-slate-500">Generate semestral summary of all statistical services.</p>
+                </div>
+                <div className="p-6 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                  <h3 className="font-bold text-navy mb-2">FM-RIS-060 Honoraria Requisition</h3>
+                  <p className="text-sm text-slate-500">Generate requisition for URS honoraria distribution.</p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-400 mt-4">Note: Report generation is done via Google Sheet. Go to Extensions → Apps Script → Generate Reports in your dashboard.</p>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
