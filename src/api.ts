@@ -101,20 +101,27 @@ export async function getDashboardData(): Promise<DashboardData> {
 
 // Update client status (for URS)
 export async function updateClientStatus(recordId: string, status: string, notes?: string): Promise<UpdateStatusResponse> {
-  const response = await fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'updateClientStatus',
-      recordId,
-      status,
-      notes: notes || ''
-    })
-  });
-  
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.statusText}`);
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'cors',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'updateClientStatus',
+        recordId,
+        status,
+        notes: notes || ''
+      })
+    });
+    
+    const text = await response.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { success: false, message: text || 'Failed to parse response' };
+    }
+  } catch (err: any) {
+    throw new Error(err.message || 'Network error');
   }
-  
-  return response.json();
 }
