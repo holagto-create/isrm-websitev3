@@ -1405,12 +1405,13 @@ function DashboardPage({ onLogout }: { onLogout: () => void }) {
 function URSLoginPage({ onLogin }: { onLogin: (name: string) => void }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!name || !email) {
-      setError('Please enter both your name and email');
+    if (!name || !email || !password) {
+      setError('Please enter your name, email, and password');
       return;
     }
 
@@ -1419,13 +1420,13 @@ function URSLoginPage({ onLogin }: { onLogin: (name: string) => void }) {
 
     try {
       // Call API to validate credentials
-      const result = await validateURSCredentials(name, email);
+      const result = await validateURSCredentials(name, email, password);
       
       if (result.success && result.valid) {
         // Use the name from the response (normalized from database)
         onLogin(result.name || name);
       } else {
-        setError(result.message || 'Invalid credentials. Please check your name and email.');
+        setError(result.message || 'Invalid credentials. Please check your name, email, and password.');
       }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -1465,6 +1466,17 @@ function URSLoginPage({ onLogin }: { onLogin: (name: string) => void }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your SLU email"
+                className="w-full border border-slate-200 rounded-lg px-4 py-3"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Your Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
                 className="w-full border border-slate-200 rounded-lg px-4 py-3"
               />
             </div>

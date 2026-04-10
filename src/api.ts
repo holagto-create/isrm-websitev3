@@ -53,8 +53,8 @@ async function callScriptAPI<T>(action: string, params: Record<string, string> =
 }
 
 // Validate URS credentials
-export async function validateURSCredentials(name: string, email: string): Promise<ValidationResponse> {
-  return callScriptAPI<ValidationResponse>('validateURSCredentials', { name, email });
+export async function validateURSCredentials(name: string, email: string, password: string): Promise<ValidationResponse> {
+  return callScriptAPI<ValidationResponse>('validateURSCredentials', { name, email, password });
 }
 
 // Get clients for a specific URS
