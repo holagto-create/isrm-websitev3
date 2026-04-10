@@ -9,7 +9,7 @@ import {
   Percent, Target, FlaskConical, ArrowUpRight,
   BarChart3, TrendingUp, FolderOpen
 } from 'lucide-react';
-import { validateURSCredentials, getURSClients, getDashboardData, OFFICER_PASSWORD } from './api';
+import { validateURSCredentials, getURSClients, getDashboardData, updateClientStatus, OFFICER_PASSWORD } from './api';
 
 // ============================================================================
 // TYPES
@@ -1770,6 +1770,10 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
   const [summary, setSummary] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editingClient, setEditingClient] = useState<string | null>(null);
+  const [editStatus, setEditStatus] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     loadURSData();
@@ -1804,6 +1808,36 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
 
   const getPaymentColor = (status: string) => {
     return status === 'Paid' ? 'text-emerald-600' : 'text-amber-600';
+  };
+
+  const handleEditClient = (client: any) => {
+    setEditingClient(client['Record ID']);
+    setEditStatus(client['Status'] || 'New');
+    setEditNotes('');
+  };
+
+  const handleSaveStatus = async () => {
+    if (!editingClient) return;
+    setUpdating(true);
+    try {
+      const result = await updateClientStatus(editingClient, editStatus, editNotes);
+      if (result.success) {
+        loadURSData();
+        setEditingClient(null);
+      } else {
+        alert(result.message || 'Failed to update');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to update');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingClient(null);
+    setEditStatus('');
+    setEditNotes('');
   };
 
   if (loading) {
@@ -1915,25 +1949,69 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
                         {client['Payment Status'] || '-'}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(client['Status'])}`}>
-                          {client['Status'] || 'New'}
-                        </span>
+                        {editingClient === client['Record ID'] ? (
+                          <select
+                            value={editStatus}
+                            onChange={(e) => setEditStatus(e.target.value)}
+                            className="text-xs border border-slate-300 rounded px-2 py-1 bg-white"
+                          >
+                            <option value="New">New</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                          </select>
+                        ) : (
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(client['Status'])}`}>
+                            {client['Status'] || 'New'}
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-gold">
                         ₱{parseFloat(client['URS Share 60% (₱)'] || 0).toLocaleString()}
                       </td>
                       <td className="px-6 py-4">
-                        {client['Drive Folder URL'] ? (
-                          <a
-                            href={client['Drive Folder URL']}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-navy text-white text-xs font-medium rounded hover:bg-navy/90"
-                          >
-                            <FolderOpen size={14} /> Drive
-                          </a>
+                        {editingClient === client['Record ID'] ? (
+                          <div className="flex flex-col gap-2">
+                            <textarea
+                              value={editNotes}
+                              onChange={(e) => setEditNotes(e.target.value)}
+                              placeholder="Add notes..."
+                              className="text-xs border border-slate-300 rounded px-2 py-1 w-32 h-16 resize-none"
+                            />
+                            <div className="flex gap-1">
+                              <button
+                                onClick={handleSaveStatus}
+                                disabled={updating}
+                                className="px-2 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700 disabled:opacity-50"
+                              >
+                                {updating ? 'Saving...' : 'Save'}
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="px-2 py-1 bg-slate-300 text-slate-700 text-xs rounded hover:bg-slate-400"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
                         ) : (
-                          <span className="text-slate-400 text-xs">-</span>
+                          <div className="flex items-center gap-2">
+                            {client['Drive Folder URL'] && (
+                              <a
+                                href={client['Drive Folder URL']}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-navy text-white text-xs font-medium rounded hover:bg-navy/90"
+                              >
+                                <FolderOpen size={14} /> Drive
+                              </a>
+                            )}
+                            <button
+                              onClick={() => handleEditClient(client)}
+                              className="px-2 py-1.5 bg-amber-100 text-amber-700 text-xs font-medium rounded hover:bg-amber-200"
+                            >
+                              Edit
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>

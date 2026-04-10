@@ -60,6 +60,14 @@ export interface DashboardData {
   };
 }
 
+export interface UpdateStatusResponse {
+  success: boolean;
+  message: string;
+  recordId?: string;
+  status?: string;
+  notesAdded?: boolean;
+}
+
 // Call Google Apps Script Web App API
 async function callScriptAPI<T>(action: string, params: Record<string, string> = {}): Promise<T> {
   const url = new URL(SCRIPT_URL);
@@ -89,4 +97,24 @@ export async function getURSClients(ursName: string): Promise<URSClientResponse>
 // Get all dashboard data (for Officer)
 export async function getDashboardData(): Promise<DashboardData> {
   return callScriptAPI<DashboardData>('getDashboardData');
+}
+
+// Update client status (for URS)
+export async function updateClientStatus(recordId: string, status: string, notes?: string): Promise<UpdateStatusResponse> {
+  const response = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'updateClientStatus',
+      recordId,
+      status,
+      notes: notes || ''
+    })
+  });
+  
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.statusText}`);
+  }
+  
+  return response.json();
 }
