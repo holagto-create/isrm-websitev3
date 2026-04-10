@@ -1356,11 +1356,16 @@ function DashboardPage({ onLogout }: { onLogout: () => void }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState(() => sessionStorage.getItem('officerSection') || 'dashboard');
 
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Save active section to session storage
+  useEffect(() => {
+    sessionStorage.setItem('officerSection', activeSection);
+  }, [activeSection]);
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -1390,11 +1395,11 @@ function DashboardPage({ onLogout }: { onLogout: () => void }) {
   };
 
   const menuItems = [
-    { id: 'dashboard', label: '📊 Dashboard', icon: '📊' },
-    { id: 'clients', label: '📋 Clients', icon: '📋' },
-    { id: 'financial', label: '💰 Financial', icon: '💰' },
-    { id: 'urs', label: '👥 URS Registry', icon: '👥' },
-    { id: 'reports', label: '📄 Reports', icon: '📄' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'clients', label: 'Clients' },
+    { id: 'financial', label: 'Financial' },
+    { id: 'urs', label: 'URS Registry' },
+    { id: 'reports', label: 'Reports' },
   ];
 
   if (loading) {
@@ -1432,13 +1437,12 @@ function DashboardPage({ onLogout }: { onLogout: () => void }) {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg mb-2 flex items-center gap-3 transition-all ${
+                className={`w-full text-left px-4 py-3 rounded-lg mb-2 transition-all ${
                   activeSection === item.id
                     ? 'bg-navy text-white'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                <span>{item.icon}</span>
                 <span className="font-medium">{item.label}</span>
               </button>
             ))}
