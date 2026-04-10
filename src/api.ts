@@ -1,6 +1,6 @@
 // Google Apps Script Web App URL
 // Deployed: April 11, 2026
-export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZ1NXoNGs68U3cF6oL-xg5x9DIb2IXoYBGvJLHchpYiwPCGDbedIBgBVmmLq72U-QaJA/exec';
+export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzwUtqQ8uIumhqR2OePgNOH7OpVInhBbX-f5QJSXIbjISlZ_MDq3xHdRhmOCSMEeaEamQ/exec';
 
 export interface URSClient {
   'Record ID': string;
