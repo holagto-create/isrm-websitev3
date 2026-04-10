@@ -1779,9 +1779,12 @@ function doPost(e) {
 
     if (action === 'updateClientStatus') {
       const { recordId, status, notes } = postData;
+      Logger.log('updateClientStatus called: recordId=' + recordId + ', status=' + status + ', notes=' + notes);
       return ContentService.createTextOutput(JSON.stringify(updateClientStatusByURS(recordId, status, notes)))
         .setMimeType(ContentService.MimeType.JSON);
     }
+
+    Logger.log('Unknown action received: ' + action + '. Full postData: ' + JSON.stringify(postData));
 
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
