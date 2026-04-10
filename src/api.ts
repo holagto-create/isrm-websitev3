@@ -32,6 +32,7 @@ export interface URSClientResponse {
 export interface ValidationResponse {
   success: boolean;
   valid: boolean;
+  name?: string;
   message?: string;
 }
 

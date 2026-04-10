@@ -1422,7 +1422,8 @@ function URSLoginPage({ onLogin }: { onLogin: (name: string) => void }) {
       const result = await validateURSCredentials(name, email);
       
       if (result.success && result.valid) {
-        onLogin(name);
+        // Use the name from the response (normalized from database)
+        onLogin(result.name || name);
       } else {
         setError(result.message || 'Invalid credentials. Please check your name and email.');
       }
