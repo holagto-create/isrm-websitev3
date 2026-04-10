@@ -1999,12 +1999,17 @@ function Footer() {
 // MAIN APP
 // ============================================================================
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentPage, setCurrentPage] = useState(() => sessionStorage.getItem('currentPage') || 'home');
+  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem('officerAuthenticated') === 'true');
   const [ursAuthenticated, setURSAuthenticated] = useState(false);
   const [ursName, setURSName] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
+
+  // Save currentPage to sessionStorage whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem('currentPage', currentPage);
+  }, [currentPage]);
 
   // Check for saved URS session on load
   useEffect(() => {
@@ -2013,7 +2018,6 @@ export default function App() {
     if (savedURSName && savedURSAuth === 'true') {
       setURSName(savedURSName);
       setURSAuthenticated(true);
-      setCurrentPage('urs-portal');
     }
   }, []);
 
@@ -2037,6 +2041,8 @@ export default function App() {
     sessionStorage.removeItem('ursAuthenticated');
     // Clear officer session
     sessionStorage.removeItem('officerAuthenticated');
+    sessionStorage.removeItem('currentPage');
+    sessionStorage.removeItem('officerSection');
     setIsAuthenticated(false);
     setURSAuthenticated(false);
     setURSName('');
