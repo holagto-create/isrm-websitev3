@@ -9,7 +9,7 @@ import {
   Percent, Target, FlaskConical, ArrowUpRight,
   BarChart3, TrendingUp, FolderOpen
 } from 'lucide-react';
-import { validateURSCredentials, getURSClients } from './api';
+import { validateURSCredentials, getURSClients, getDashboardData, OFFICER_PASSWORD } from './api';
 
 // ============================================================================
 // TYPES
@@ -1347,16 +1347,64 @@ function PersonnelPage() {
 }
 
 // ============================================================================
-// DASHBOARD PAGE (PRIVATE)
+// DASHBOARD PAGE (PRIVATE) - Full Officer Dashboard
 // ============================================================================
 function DashboardPage({ onLogout }: { onLogout: () => void }) {
+  const [clients, setClients] = useState<any[]>([]);
+  const [financial, setFinancial] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    setLoading(true);
+    try {
+      const data = await getDashboardData();
+      setClients(data.clients || []);
+      setFinancial(data.financial || {});
+    } catch (err: any) {
+      setError(err.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredClients = filter === 'all' 
+    ? clients 
+    : clients.filter((c: any) => c['Status'] === filter);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Completed': return 'bg-emerald-100 text-emerald-800';
+      case 'In Progress': return 'bg-amber-100 text-amber-800';
+      case 'New': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-slate-100 text-slate-600';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="pt-24 pb-16 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-navy border-t-gold rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-500">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-24 pb-16 bg-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-6">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-navy font-playfair">ISRM Officer's Command Center</h1>
-            <p className="text-slate-500">Private dashboard for ISM operations</p>
+            <p className="text-slate-500">Live dashboard with Google Sheets data</p>
           </div>
           <button
             onClick={onLogout}
@@ -1366,33 +1414,116 @@ function DashboardPage({ onLogout }: { onLogout: () => void }) {
           </button>
         </div>
 
-        {/* Dashboard Content */}
-        <Card className="p-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-navy/10 flex items-center justify-center mx-auto mb-6">
-            <Lock size={40} className="text-navy" />
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="p-5 text-center">
+            <div className="text-3xl font-bold text-navy">{financial.totalCount || 0}</div>
+            <div className="text-xs text-slate-500 uppercase mt-1">Total Clients</div>
+          </Card>
+          <Card className="p-5 text-center">
+            <div className="text-3xl font-bold text-emerald-600">{financial.paidCount || 0}</div>
+            <div className="text-xs text-slate-500 uppercase mt-1">Paid</div>
+          </Card>
+          <Card className="p-5 text-center">
+            <div className="text-3xl font-bold text-amber-600">{financial.pendingCount || 0}</div>
+            <div className="text-xs text-slate-500 uppercase mt-1">Pending</div>
+          </Card>
+          <Card className="p-5 text-center">
+            <div className="text-3xl font-bold text-gold">₱{(financial.grossFees || 0).toLocaleString()}</div>
+            <div className="text-xs text-slate-500 uppercase mt-1">Total Revenue</div>
+          </Card>
+        </div>
+
+        {/* Financial Summary */}
+        <Card className="p-6 mb-8">
+          <h2 className="text-lg font-bold text-navy font-playfair mb-4">💰 Financial Summary (60/40 Split)</h2>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-slate-50 rounded-lg">
+              <div className="text-2xl font-bold text-navy">₱{(financial.grossFees || 0).toLocaleString()}</div>
+              <div className="text-xs text-slate-500">Gross Fees</div>
+            </div>
+            <div className="text-center p-4 bg-gold/10 rounded-lg">
+              <div className="text-2xl font-bold text-gold">₱{(financial.ursHonoraria || 0).toLocaleString()}</div>
+              <div className="text-xs text-slate-500">URS Honoraria (60%)</div>
+            </div>
+            <div className="text-center p-4 bg-navy/10 rounded-lg">
+              <div className="text-2xl font-bold text-navy">₱{(financial.unitShare || 0).toLocaleString()}</div>
+              <div className="text-xs text-slate-500">Unit Share (40%)</div>
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-navy font-playfair mb-3">Private Access Area</h2>
-          <p className="text-slate-500 mb-6 max-w-md mx-auto">
-            This is a protected area. The full dashboard with live Google Sheets data is available at the ISRM Command Center.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <a
-              href="https://isrm-command-center.vercel.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-3 bg-navy text-white font-bold rounded-lg hover:bg-navy/90 transition-all"
+        </Card>
+
+        {/* Filter */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {['all', 'New', 'In Progress', 'Completed'].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                filter === f 
+                  ? 'bg-navy text-white' 
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              }`}
             >
-              Open Full Dashboard <ExternalLink size={16} />
-            </a>
-            <a
-              href="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-all"
-            >
-              Open Google Sheet <ExternalLink size={16} />
-            </a>
+              {f === 'all' ? 'All' : f}
+            </button>
+          ))}
+        </div>
+
+        {/* Clients Table */}
+        <Card className="overflow-hidden">
+          <div className="bg-navy px-6 py-4">
+            <h2 className="text-white font-bold text-lg font-playfair">Client Records</h2>
           </div>
+
+          {filteredClients.length === 0 ? (
+            <div className="p-12 text-center text-slate-400">
+              <Users size={48} className="mx-auto mb-4 opacity-40" />
+              <p>No clients found.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Record ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Client</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Research</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Service</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Fee</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Payment</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase">Assigned URS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredClients.slice(0, 50).map((client: any, idx: number) => (
+                    <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
+                      <td className="px-4 py-3 text-sm font-medium text-navy">{client['Record ID'] || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-600">{client['Date'] || '-'}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="font-medium text-navy">{client['Client Name'] || '-'}</div>
+                        <div className="text-xs text-slate-400">{client['Email'] || '-'}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">{client['Research Title'] || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-600">{client['Service Type'] || '-'}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-gold">₱{parseFloat(client['Total Fee (₱)'] || 0).toLocaleString()}</td>
+                      <td className={`px-4 py-3 text-sm font-medium ${client['Payment Status'] === 'Paid' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                        {client['Payment Status'] || '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(client['Status'])}`}>
+                          {client['Status'] || 'New'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600">{client['Assigned URS'] || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
       </div>
     </div>
@@ -1756,13 +1887,15 @@ export default function App() {
     }
   }, []);
 
-  const CORRECT_PASSWORD = 'ISRM2026'; // Change this to your desired password
+  const CORRECT_PASSWORD = OFFICER_PASSWORD; // From api.ts
 
   const handleLogin = () => {
     if (password === CORRECT_PASSWORD) {
       setIsAuthenticated(true);
       setCurrentPage('dashboard');
       setAuthError(false);
+      // Save officer session
+      sessionStorage.setItem('officerAuthenticated', 'true');
     } else {
       setAuthError(true);
     }
@@ -1772,12 +1905,23 @@ export default function App() {
     // Clear URS session
     sessionStorage.removeItem('ursName');
     sessionStorage.removeItem('ursAuthenticated');
+    // Clear officer session
+    sessionStorage.removeItem('officerAuthenticated');
     setIsAuthenticated(false);
     setURSAuthenticated(false);
     setURSName('');
     setCurrentPage('home');
     setPassword('');
   };
+
+  // Check for saved officer session on load
+  useEffect(() => {
+    const savedOfficerAuth = sessionStorage.getItem('officerAuthenticated');
+    if (savedOfficerAuth === 'true') {
+      setIsAuthenticated(true);
+      setCurrentPage('dashboard');
+    }
+  }, []);
 
   const handlePageChange = (page: string) => {
     if (page === 'dashboard' && !isAuthenticated) {

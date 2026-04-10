@@ -2,6 +2,8 @@
 // Deployed: April 11, 2026
 export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzwUtqQ8uIumhqR2OePgNOH7OpVInhBbX-f5QJSXIbjISlZ_MDq3xHdRhmOCSMEeaEamQ/exec';
 
+export const OFFICER_PASSWORD = 'ISRM2026'; // Officer portal password
+
 export interface URSClient {
   'Record ID': string;
   'Client Name': string;
@@ -12,6 +14,12 @@ export interface URSClient {
   'Status': string;
   'URS Share 60% (₱)': number;
   'Drive Folder URL': string;
+  'Date': string;
+  'Course/Department': string;
+  'Total Fee (₱)': number;
+  'ORS #': string;
+  'Assigned URS': string;
+  'Unit Share 40% (₱)': number;
 }
 
 export interface URSSummary {
@@ -34,6 +42,22 @@ export interface ValidationResponse {
   valid: boolean;
   name?: string;
   message?: string;
+}
+
+export interface DashboardData {
+  clients: URSClient[];
+  urs: any[];
+  financial: {
+    grossFees: number;
+    ursHonoraria: number;
+    unitShare: number;
+    paidCount: number;
+    pendingCount: number;
+    completedCount: number;
+    inProgressCount: number;
+    newCount: number;
+    totalCount: number;
+  };
 }
 
 // Call Google Apps Script Web App API
@@ -60,4 +84,9 @@ export async function validateURSCredentials(name: string, email: string, passwo
 // Get clients for a specific URS
 export async function getURSClients(ursName: string): Promise<URSClientResponse> {
   return callScriptAPI<URSClientResponse>('getURSClients', { ursName });
+}
+
+// Get all dashboard data (for Officer)
+export async function getDashboardData(): Promise<DashboardData> {
+  return callScriptAPI<DashboardData>('getDashboardData');
 }
