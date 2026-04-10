@@ -1820,7 +1820,9 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
     if (!editingClient) return;
     setUpdating(true);
     try {
+      console.log('Saving status:', { recordId: editingClient, status: editStatus, notes: editNotes });
       const result = await updateClientStatus(editingClient, editStatus, editNotes);
+      console.log('Result:', result);
       if (result.success) {
         loadURSData();
         setEditingClient(null);
@@ -1828,6 +1830,7 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
         alert(result.message || 'Failed to update');
       }
     } catch (err: any) {
+      console.error('Error:', err);
       alert(err.message || 'Failed to update');
     } finally {
       setUpdating(false);

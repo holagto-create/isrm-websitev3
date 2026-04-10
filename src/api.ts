@@ -1,6 +1,6 @@
 // Google Apps Script Web App URL
 // Deployed: April 11, 2026
-export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsImOGhuxNTKWC7SB5XIH-Jvu611abPcl2nDZIyuY6hl1zy0q2vcJQx7IRsafDfgoLAQ/exec';
+export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfiRuiVkIWd5-IgSm-N4zVhdaF8-9-NLAFMYXKUdsh0D8uUhSwhA6ljduBH2pAbAx-8w/exec';
 
 export const OFFICER_PASSWORD = 'ISRM2026'; // Officer portal password
 
@@ -102,6 +102,7 @@ export async function getDashboardData(): Promise<DashboardData> {
 // Update client status (for URS)
 export async function updateClientStatus(recordId: string, status: string, notes?: string): Promise<UpdateStatusResponse> {
   try {
+    console.log('Sending update request:', { action: 'updateClientStatus', recordId, status, notes });
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
       mode: 'cors',
@@ -115,13 +116,16 @@ export async function updateClientStatus(recordId: string, status: string, notes
       })
     });
     
+    console.log('Response status:', response.status);
     const text = await response.text();
+    console.log('Response text:', text);
     try {
       return JSON.parse(text);
     } catch {
       return { success: false, message: text || 'Failed to parse response' };
     }
   } catch (err: any) {
+    console.error('Fetch error:', err);
     throw new Error(err.message || 'Network error');
   }
 }
