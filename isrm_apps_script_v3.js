@@ -1736,8 +1736,22 @@ function doGet(e) {
  * Supports: action=updateClientBatch, action=generateReport
  */
 function doPost(e) {
-  const postData = e.postData ? JSON.parse(e.postData.contents) : {};
+  let postData = {};
+  try {
+    if (e.postData && e.postData.contents) {
+      postData = JSON.parse(e.postData.contents);
+    } else if (e.parameter && e.parameter.action) {
+      postData = e.parameter;
+    }
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: 'Failed to parse request: ' + err.message
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
   const action = postData.action;
+  Logger.log('doPost received: action=' + action + ', postData=' + JSON.stringify(postData));
 
   try {
     if (action === 'updateClientBatch') {
