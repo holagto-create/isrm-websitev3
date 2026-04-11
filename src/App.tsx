@@ -1824,6 +1824,7 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
       const result = await updateClientStatus(editingClient, editStatus, editNotes);
       console.log('Result:', result);
       if (result.success) {
+        alert(result.message || 'Updated successfully!');
         loadURSData();
         setEditingClient(null);
       } else {

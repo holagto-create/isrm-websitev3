@@ -119,13 +119,19 @@ export async function updateClientStatus(recordId: string, status: string, notes
     console.log('Response status:', response.status);
     const text = await response.text();
     console.log('Response text:', text);
+    
+    // Check if response is empty or not valid JSON
+    if (!text || text.trim() === '') {
+      return { success: false, message: 'Empty response from server' };
+    }
+    
     try {
       return JSON.parse(text);
     } catch {
-      return { success: false, message: text || 'Failed to parse response' };
+      return { success: false, message: 'Failed to parse response: ' + text.substring(0, 200) };
     }
   } catch (err: any) {
     console.error('Fetch error:', err);
-    throw new Error(err.message || 'Network error');
+    throw new Error(err.message || 'Network error: ' + err.toString());
   }
 }
