@@ -1980,8 +1980,10 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
                       <td className="px-6 py-4 text-sm font-medium text-gold">
                         ₱{parseFloat(client['URS Share 60% (₱)'] || 0).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 text-xs text-slate-500 max-w-32" title={client['Remarks']}>
-                        {client['Remarks'] ? (client['Remarks'].length > 30 ? client['Remarks'].substring(0, 30) + '...' : client['Remarks']) : '-'}
+                      <td className="px-6 py-4 text-xs text-slate-600 max-w-48" title={client['Remarks'] || ''}>
+                        <div className="truncate" title={client['Remarks'] || ''}>
+                          {client['Remarks'] || '-'}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         {editingClient === client['Record ID'] ? (
