@@ -2130,15 +2130,21 @@ export default function App() {
           getAnnouncements(),
           getLiveUpdates()
         ]);
-        console.log('Announcements response:', annRes);
-        console.log('LiveUpdates response:', updateRes);
-        if (annRes.success && annRes.announcements.length > 0) {
+        console.log('API Response - Announcements:', annRes);
+        console.log('API Response - LiveUpdates:', updateRes);
+        
+        if (annRes.success && annRes.announcements && annRes.announcements.length > 0) {
           setAnnouncements(annRes.announcements);
-          console.log('Set announcements:', annRes.announcements);
+          console.log('✓ Loaded announcements:', annRes.announcements.length);
+        } else {
+          console.log('No announcements from API, using defaults');
         }
-        if (updateRes.success && updateRes.updates.length > 0) {
+        
+        if (updateRes.success && updateRes.updates && updateRes.updates.length > 0) {
           setLiveUpdates(updateRes.updates);
-          console.log('Set live updates:', updateRes.updates);
+          console.log('✓ Loaded live updates:', updateRes.updates.length);
+        } else {
+          console.log('No live updates from API, using defaults');
         }
       } catch (err) {
         console.error('Error fetching content:', err);
