@@ -2125,17 +2125,23 @@ export default function App() {
   useEffect(() => {
     const fetchContent = async () => {
       try {
+        console.log('Fetching announcements from API...');
         const [annRes, updateRes] = await Promise.all([
           getAnnouncements(),
           getLiveUpdates()
         ]);
+        console.log('Announcements response:', annRes);
+        console.log('LiveUpdates response:', updateRes);
         if (annRes.success && annRes.announcements.length > 0) {
           setAnnouncements(annRes.announcements);
+          console.log('Set announcements:', annRes.announcements);
         }
         if (updateRes.success && updateRes.updates.length > 0) {
           setLiveUpdates(updateRes.updates);
+          console.log('Set live updates:', updateRes.updates);
         }
       } catch (err) {
+        console.error('Error fetching content:', err);
         console.log('Using default content');
       }
     };
