@@ -486,7 +486,14 @@ function HomePage({ setPage, announcements = DEFAULT_ANNOUNCEMENTS, liveUpdates 
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <Badge variant={ann.badgeColor}>{ann.badge}</Badge>
-                    <span className="text-slate-400 text-[11px]">{typeof ann.date === 'string' && ann.date.includes('T') ? new Date(ann.date).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila' }) : ann.date}</span>
+                    <span className="text-slate-400 text-[11px]">{(() => {
+                      try {
+                        if (!ann.date) return '-';
+                        const d = new Date(ann.date);
+                        if (isNaN(d.getTime())) return ann.date;
+                        return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila' });
+                      } catch { return ann.date; }
+                    })()}</span>
                   </div>
                   <div className="text-[11px] text-slate-400 uppercase tracking-widest mb-1.5">{ann.type}</div>
                   <h3 className="text-[15px] font-bold text-navy leading-snug mb-3 font-playfair">{ann.title}</h3>
@@ -567,7 +574,14 @@ function LiveUpdatesPage({ liveUpdates = [] }: { liveUpdates?: any[] }) {
                 }`}>
                   {update.category}
                 </span>
-                <span className="text-slate-400 text-[11px]">{typeof update.date === 'string' && update.date.includes('T') ? new Date(update.date).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Manila' }) : update.date}</span>
+                <span className="text-slate-400 text-[11px]">{(() => {
+                      try {
+                        if (!update.date) return '-';
+                        const d = new Date(update.date);
+                        if (isNaN(d.getTime())) return update.date;
+                        return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Manila' });
+                      } catch { return update.date; }
+                    })()}</span></span>
               </div>
               <h3 className="text-[15px] font-bold text-navy leading-snug mb-2 font-playfair group-hover:text-gold transition-colors">{update.title}</h3>
               <p className="text-slate-500 text-[13px] leading-relaxed mb-4 line-clamp-3">{update.description}</p>
