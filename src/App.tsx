@@ -1349,7 +1349,7 @@ function PersonnelPage() {
 // ============================================================================
 // DASHBOARD PAGE (PRIVATE) - Full Officer Dashboard with Sidebar
 // ============================================================================
-function DashboardPage({ onLogout }: { onLogout: () => void }) {
+function DashboardPage({ onLogout, showToast }: { onLogout: () => void; showToast?: (msg: string, type: 'success' | 'error' | 'info') => void }) {
   const [clients, setClients] = useState<any[]>([]);
   const [ursList, setUrsList] = useState<any[]>([]);
   const [financial, setFinancial] = useState<any>({});
@@ -1765,7 +1765,7 @@ function URSLoginPage({ onLogin }: { onLogin: (name: string) => void }) {
 // ============================================================================
 // URS DASHBOARD PAGE
 // ============================================================================
-function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: () => void }) {
+function URSDashboardPage({ ursName, onLogout, showToast }: { ursName: string; onLogout: () => void; showToast?: (msg: string, type: 'success' | 'error' | 'info') => void }) {
   const [clients, setClients] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>({});
   const [loading, setLoading] = useState(true);
@@ -1836,9 +1836,13 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
         ));
         // Exit edit mode immediately on success
         setEditingClient(null);
+        showToast?.('Status updated successfully!', 'success');
+      } else {
+        showToast?.(result.message || 'Failed to update', 'error');
       }
     } catch (err: any) {
       console.error('Error:', err);
+      showToast?.('Failed to connect. Please try again.', 'error');
     } finally {
       setUpdating(false);
     }
@@ -1856,7 +1860,7 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
       <div className="pt-24 pb-16 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-navy border-t-gold rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-500">Loading your dashboard...</p>
+          <p className="text-slate-500">Loading your assigned clients...</p>
         </div>
       </div>
     );
@@ -2104,6 +2108,13 @@ export default function App() {
   const [ursName, setURSName] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
+  const [toast, setToast] = useState<{message: string; type: 'success' | 'error' | 'info'} | null>(null);
+
+  // Toast helper function
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Save currentPage to sessionStorage whenever it changes
   useEffect(() => {
@@ -2193,7 +2204,7 @@ export default function App() {
       {currentPage === 'resources' && <ResourcesPage />}
       {currentPage === 'services' && <ServicesPage />}
       {currentPage === 'personnel' && <PersonnelPage />}
-      {currentPage === 'dashboard' && isAuthenticated && <DashboardPage onLogout={handleLogout} />}
+      {currentPage === 'dashboard' && isAuthenticated && <DashboardPage onLogout={handleLogout} showToast={showToast} />}
       {currentPage === 'dashboard' && !isAuthenticated && (
         <div className="pt-32 pb-16 min-h-screen flex items-center justify-center">
           <Card className="p-8 max-w-md w-full mx-4">
@@ -2240,11 +2251,28 @@ export default function App() {
       {currentPage === 'urs-portal' && ursAuthenticated && (
         <URSDashboardPage 
           ursName={ursName} 
-          onLogout={handleLogout} 
+          onLogout={handleLogout}
+          showToast={showToast}
         />
       )}
       
       <Footer />
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in ${
+          toast.type === 'success' ? 'bg-emerald-600 text-white' :
+          toast.type === 'error' ? 'bg-red-600 text-white' :
+          'bg-navy text-white'
+        }`}>
+          <div className="flex items-center gap-2">
+            {toast.type === 'success' && <CheckCircle size={18} />}
+            {toast.type === 'error' && <AlertCircle size={18} />}
+            {toast.type === 'info' && <Bell size={18} />}
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
