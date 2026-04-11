@@ -1774,7 +1774,6 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
   const [editStatus, setEditStatus] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [updating, setUpdating] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     loadURSData();
@@ -1824,24 +1823,19 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
     }
     if (!editingClient) return false;
     setUpdating(true);
-    setSaveSuccess(false);
     try {
       console.log('Saving - recordId:', editingClient, 'status:', editStatus, 'notes:', editNotes);
       const result = await updateClientStatus(editingClient, editStatus, editNotes);
       console.log('API Result:', result);
       if (result.success) {
-        setSaveSuccess(true);
-        // Update local state immediately instead of full reload
+        // Update local state immediately
         setClients(prevClients => prevClients.map(c => 
           c['Record ID'] === editingClient 
             ? { ...c, 'Status': editStatus, 'Remarks': editNotes ? ((c['Remarks'] || '') + '\n[' + new Date().toLocaleString() + '] ' + editNotes) : c['Remarks'] }
             : c
         ));
-        // Exit edit mode after short delay
-        setTimeout(() => {
-          setEditingClient(null);
-          setSaveSuccess(false);
-        }, 1500);
+        // Exit edit mode immediately on success
+        setEditingClient(null);
       }
     } catch (err: any) {
       console.error('Error:', err);
@@ -2000,13 +1994,13 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
                                 <button
                                   type="submit"
                                   disabled={updating}
-                                  className={`px-2 py-1 text-white text-xs rounded hover:bg-emerald-700 disabled:opacity-50 ${saveSuccess ? 'bg-green-500' : 'bg-emerald-600'}`}
+                                  className="px-2 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700 disabled:opacity-50"
                                 >
-                                  {updating ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
+                                  {updating ? 'Saving...' : 'Save'}
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={handleCancelEdit}
+                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingClient(null); }}
                                   className="px-2 py-1 bg-slate-300 text-slate-700 text-xs rounded hover:bg-slate-400"
                                 >
                                   Cancel
