@@ -135,3 +135,55 @@ export async function updateClientStatus(recordId: string, status: string, notes
     throw new Error(err.message || 'Network error: ' + err.toString());
   }
 }
+
+// Content APIs - fetch from Google Sheets
+
+export interface Announcement {
+  id: number;
+  type: string;
+  badge: string;
+  date: string;
+  title: string;
+  body: string;
+}
+
+export interface LiveUpdate {
+  id: number;
+  title: string;
+  description: string;
+  link: string;
+  date: string;
+  category: string;
+}
+
+export interface Resource {
+  id: number;
+  category: string;
+  title: string;
+  description: string;
+  link: string;
+  tags: string[];
+}
+
+// Call Google Apps Script Web App API (GET requests)
+async function callScriptAPIGet<T>(action: string): Promise<T> {
+  const url = new URL(SCRIPT_URL);
+  url.searchParams.set('action', action);
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function getAnnouncements(): Promise<{ success: boolean; announcements: Announcement[] }> {
+  return callScriptAPIGet<{ success: boolean; announcements: Announcement[] }>('getAnnouncements');
+}
+
+export async function getLiveUpdates(): Promise<{ success: boolean; updates: LiveUpdate[] }> {
+  return callScriptAPIGet<{ success: boolean; updates: LiveUpdate[] }>('getLiveUpdates');
+}
+
+export async function getResources(): Promise<{ success: boolean; resources: Resource[] }> {
+  return callScriptAPIGet<{ success: boolean; resources: Resource[] }>('getResources');
+}

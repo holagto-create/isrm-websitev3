@@ -77,6 +77,7 @@ const CONFIG = {
     CLIENTS:  'Clients',
     URS:      'URS_Registry',
     SUMMARY:  'Financial_Summary',
+    ANNOUNCEMENTS: 'Announcements',
   },
 
   // ── Fee Schedule (RSS Manual §II — current semester rates) ───────────────
@@ -1716,11 +1717,32 @@ function doGet(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
     
+    // Get announcements
+    if (action === 'getAnnouncements') {
+      const data = getAnnouncements();
+      return ContentService.createTextOutput(JSON.stringify(data))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Get live updates
+    if (action === 'getLiveUpdates') {
+      const data = getLiveUpdates();
+      return ContentService.createTextOutput(JSON.stringify(data))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Get resources
+    if (action === 'getResources') {
+      const data = getResources();
+      return ContentService.createTextOutput(JSON.stringify(data))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
     // Default: Return API info
     return ContentService.createTextOutput(JSON.stringify({
       status: 'ok',
       message: 'ISRM API is running. Use ?action=getDashboardData for data.',
-      availableActions: ['getDashboardData', 'getURSClients']
+      availableActions: ['getDashboardData', 'getURSClients', 'getAnnouncements', 'getLiveUpdates', 'getResources']
     })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (error) {
@@ -2319,5 +2341,119 @@ function updateClientStatusByURS(recordId, status, notes) {
       success: false,
       message: e.message
     };
+  }
+}
+
+/**
+ * getAnnouncements — Returns announcements from Announcements sheet
+ */
+function getAnnouncements() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(CONFIG.SHEET.ANNOUNCEMENTS);
+    
+    // Create sheet if it doesn't exist
+    if (!sheet) {
+      sheet = ss.insertSheet(CONFIG.SHEET.ANNOUNCEMENTS);
+      sheet.getRange(1, 1, 1, 5).setValues([['Type', 'Badge', 'Date', 'Title', 'Body']]).setFontWeight('bold');
+      return { success: true, announcements: [] };
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return { success: true, announcements: [] };
+    }
+    
+    const announcements = [];
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0]) {
+        announcements.push({
+          id: i,
+          type: data[i][0] || '',
+          badge: data[i][1] || '',
+          date: data[i][2] || '',
+          title: data[i][3] || '',
+          body: data[i][4] || '',
+        });
+      }
+    }
+    
+    return { success: true, announcements: announcements };
+  } catch (e) {
+    return { success: false, message: e.message, announcements: [] };
+  }
+}
+
+/**
+ * getLiveUpdates — Returns live updates from LiveUpdates sheet
+ */
+function getLiveUpdates() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName('LiveUpdates');
+    
+    if (!sheet) {
+      return { success: true, updates: [] };
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return { success: true, updates: [] };
+    }
+    
+    const updates = [];
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0]) {
+        updates.push({
+          id: i,
+          title: data[i][0] || '',
+          description: data[i][1] || '',
+          link: data[i][2] || '',
+          date: data[i][3] || '',
+          category: data[i][4] || '',
+        });
+      }
+    }
+    
+    return { success: true, updates: updates };
+  } catch (e) {
+    return { success: false, message: e.message, updates: [] };
+  }
+}
+
+/**
+ * getResources — Returns resources from Resources sheet
+ */
+function getResources() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName('Resources');
+    
+    if (!sheet) {
+      return { success: true, resources: [] };
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return { success: true, resources: [] };
+    }
+    
+    const resources = [];
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0]) {
+        resources.push({
+          id: i,
+          category: data[i][0] || '',
+          title: data[i][1] || '',
+          description: data[i][2] || '',
+          link: data[i][3] || '',
+          tags: data[i][4] ? data[i][4].split(',').map(t => t.trim()) : [],
+        });
+      }
+    }
+    
+    return { success: true, resources: resources };
+  } catch (e) {
+    return { success: false, message: e.message, resources: [] };
   }
 }

@@ -9,7 +9,7 @@ import {
   Percent, Target, FlaskConical, ArrowUpRight,
   BarChart3, TrendingUp, FolderOpen
 } from 'lucide-react';
-import { validateURSCredentials, getURSClients, getDashboardData, updateClientStatus, OFFICER_PASSWORD } from './api';
+import { validateURSCredentials, getURSClients, getDashboardData, updateClientStatus, getAnnouncements, getLiveUpdates, getResources, OFFICER_PASSWORD } from './api';
 
 // ============================================================================
 // TYPES
@@ -52,9 +52,9 @@ interface LiveUpdate {
 }
 
 // ============================================================================
-// DATA - Edit these freely
+// DATA - Default content (used as fallback if API fails)
 // ============================================================================
-const ANNOUNCEMENTS: Announcement[] = [
+const DEFAULT_ANNOUNCEMENTS: Announcement[] = [
   {
     id: 1,
     type: 'Workshop',
@@ -87,7 +87,7 @@ const ANNOUNCEMENTS: Announcement[] = [
   },
 ];
 
-const LIVE_UPDATES: LiveUpdate[] = [
+const DEFAULT_LIVE_UPDATES: LiveUpdate[] = [
   {
     id: 1,
     title: 'APA 7th Edition Statistics Reporting Guide',
@@ -376,7 +376,9 @@ function Navbar({ currentPage, setPage }: { currentPage: string; setPage: (page:
 // ============================================================================
 // HOME PAGE
 // ============================================================================
-function HomePage({ setPage }: { setPage: (page: string) => void }) {
+function HomePage({ setPage, announcements = DEFAULT_ANNOUNCEMENTS, liveUpdates = DEFAULT_LIVE_UPDATES }: { setPage: (page: string) => void; announcements?: any[]; liveUpdates?: any[] }) {
+  const displayAnnouncements = announcements.length > 0 ? announcements : DEFAULT_ANNOUNCEMENTS;
+  const displayLiveUpdates = liveUpdates.length > 0 ? liveUpdates : DEFAULT_LIVE_UPDATES;
   return (
     <div className="pt-16">
       {/* Hero */}
@@ -478,7 +480,7 @@ function HomePage({ setPage }: { setPage: (page: string) => void }) {
             <p className="text-slate-500 max-w-lg mx-auto">Stay informed about workshops, methodology tips, and unit advisories.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {ANNOUNCEMENTS.slice(0, 3).map((ann) => (
+            {displayAnnouncements.slice(0, 3).map((ann) => (
               <Card key={ann.id} className="overflow-hidden">
                 <div className="h-1 bg-gold" />
                 <div className="p-6">
@@ -502,12 +504,13 @@ function HomePage({ setPage }: { setPage: (page: string) => void }) {
 // ============================================================================
 // LIVE UPDATES PAGE
 // ============================================================================
-function LiveUpdatesPage() {
+function LiveUpdatesPage({ liveUpdates = [] }: { liveUpdates?: any[] }) {
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
   const categories = ['All', 'Trends', 'Guidelines', 'Tools', 'Publications'];
+  const displayLiveUpdates = liveUpdates.length > 0 ? liveUpdates : DEFAULT_LIVE_UPDATES;
 
-  const filtered = LIVE_UPDATES.filter(u => {
+  const filtered = displayLiveUpdates.filter(u => {
     const matchCat = filter === 'All' || u.category === filter;
     const matchSearch = !search || u.title.toLowerCase().includes(search.toLowerCase()) || u.description.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
@@ -2109,12 +2112,35 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState(false);
   const [toast, setToast] = useState<{message: string; type: 'success' | 'error' | 'info'} | null>(null);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [liveUpdates, setLiveUpdates] = useState<any[]>([]);
 
   // Toast helper function
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  // Fetch content from Google Sheets on load
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const [annRes, updateRes] = await Promise.all([
+          getAnnouncements(),
+          getLiveUpdates()
+        ]);
+        if (annRes.success && annRes.announcements.length > 0) {
+          setAnnouncements(annRes.announcements);
+        }
+        if (updateRes.success && updateRes.updates.length > 0) {
+          setLiveUpdates(updateRes.updates);
+        }
+      } catch (err) {
+        console.log('Using default content');
+      }
+    };
+    fetchContent();
+  }, []);
 
   // Save currentPage to sessionStorage whenever it changes
   useEffect(() => {
@@ -2199,8 +2225,8 @@ export default function App() {
     <div className="min-h-screen bg-slate-50">
       <Navbar currentPage={currentPage} setPage={handlePageChange} />
       
-      {currentPage === 'home' && <HomePage setPage={handlePageChange} />}
-      {currentPage === 'updates' && <LiveUpdatesPage />}
+      {currentPage === 'home' && <HomePage setPage={handlePageChange} announcements={announcements} liveUpdates={liveUpdates} />}
+      {currentPage === 'updates' && <LiveUpdatesPage liveUpdates={liveUpdates} />}
       {currentPage === 'resources' && <ResourcesPage />}
       {currentPage === 'services' && <ServicesPage />}
       {currentPage === 'personnel' && <PersonnelPage />}
