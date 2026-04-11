@@ -1,6 +1,6 @@
 // Google Apps Script Web App URL
 // Deployed: April 11, 2026
-export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFGAwk8kh61QyXxrOP4JIY2_GE-G8cSL4isG2yFC6z4RnRhbwaItRKqSugOCQuvz7O4w/exec';
+export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWRpK0GMJU--FwmMiz8pLpGDLBEVUoBZYO4_MN0dVjU_xjmtHFYOJmm5ITO8DNXTxZwA/exec';
 
 export const OFFICER_PASSWORD = 'ISRM2026'; // Officer portal password
 
