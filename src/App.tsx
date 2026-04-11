@@ -1831,12 +1831,17 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
       console.log('API Result:', result);
       if (result.success) {
         setSaveSuccess(true);
-        // Reload data and reset after a short delay
+        // Update local state immediately instead of full reload
+        setClients(prevClients => prevClients.map(c => 
+          c['Record ID'] === editingClient 
+            ? { ...c, 'Status': editStatus, 'Remarks': editNotes ? ((c['Remarks'] || '') + '\n[' + new Date().toLocaleString() + '] ' + editNotes) : c['Remarks'] }
+            : c
+        ));
+        // Exit edit mode after short delay
         setTimeout(() => {
-          loadURSData();
           setEditingClient(null);
           setSaveSuccess(false);
-        }, 2000);
+        }, 1500);
       }
     } catch (err: any) {
       console.error('Error:', err);
