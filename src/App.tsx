@@ -1822,7 +1822,7 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
       e.preventDefault();
       e.stopPropagation();
     }
-    if (!editingClient) return;
+    if (!editingClient) return false;
     setUpdating(true);
     setSaveSuccess(false);
     try {
@@ -1831,20 +1831,19 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
       console.log('API Result:', result);
       if (result.success) {
         setSaveSuccess(true);
+        // Reload data and reset after a short delay
         setTimeout(() => {
           loadURSData();
           setEditingClient(null);
           setSaveSuccess(false);
-        }, 1500);
-      } else {
-        alert(result.message || 'Failed to update');
+        }, 2000);
       }
     } catch (err: any) {
       console.error('Error:', err);
-      alert(err.message || 'Failed to update');
     } finally {
       setUpdating(false);
     }
+    return false;
   };
 
   const handleCancelEdit = () => {
@@ -1983,32 +1982,33 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
                       </td>
                       <td className="px-6 py-4">
                         {editingClient === client['Record ID'] ? (
-                          <div className="flex flex-col gap-2">
-                            <textarea
-                              value={editNotes}
-                              onChange={(e) => setEditNotes(e.target.value)}
-                              placeholder="Add notes..."
-                              onKeyDown={(e) => e.key !== 'Enter' || e.shiftKey || e.preventDefault()}
-                              className="text-xs border border-slate-300 rounded px-2 py-1 w-32 h-16 resize-none"
-                            />
-                            <div className="flex gap-1">
-                              <button
-                                type="button"
-                                onClick={handleSaveStatus}
-                                disabled={updating}
-                                className={`px-2 py-1 text-white text-xs rounded hover:bg-emerald-700 disabled:opacity-50 ${saveSuccess ? 'bg-green-500' : 'bg-emerald-600'}`}
-                              >
-                                {updating ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={handleCancelEdit}
-                                className="px-2 py-1 bg-slate-300 text-slate-700 text-xs rounded hover:bg-slate-400"
-                              >
-                                Cancel
-                              </button>
+                          <form onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); handleSaveStatus(); }}>
+                            <div className="flex flex-col gap-2">
+                              <textarea
+                                value={editNotes}
+                                onChange={(e) => setEditNotes(e.target.value)}
+                                placeholder="Add notes..."
+                                onKeyDown={(e) => e.key !== 'Enter' || e.shiftKey || e.preventDefault()}
+                                className="text-xs border border-slate-300 rounded px-2 py-1 w-32 h-16 resize-none"
+                              />
+                              <div className="flex gap-1">
+                                <button
+                                  type="submit"
+                                  disabled={updating}
+                                  className={`px-2 py-1 text-white text-xs rounded hover:bg-emerald-700 disabled:opacity-50 ${saveSuccess ? 'bg-green-500' : 'bg-emerald-600'}`}
+                                >
+                                  {updating ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={handleCancelEdit}
+                                  className="px-2 py-1 bg-slate-300 text-slate-700 text-xs rounded hover:bg-slate-400"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
-                          </div>
+                          </form>
                         ) : (
                           <div className="flex items-center gap-2">
                             {client['Drive Folder URL'] && (
