@@ -1816,13 +1816,17 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
     setEditNotes('');
   };
 
-  const handleSaveStatus = async () => {
+  const handleSaveStatus = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!editingClient) return;
     setUpdating(true);
     try {
-      console.log('Saving status:', { recordId: editingClient, status: editStatus, notes: editNotes });
+      console.log('Saving - recordId:', editingClient, 'status:', editStatus, 'notes:', editNotes);
       const result = await updateClientStatus(editingClient, editStatus, editNotes);
-      console.log('Result:', result);
+      console.log('API Result:', result);
       if (result.success) {
         alert(result.message || 'Updated successfully!');
         loadURSData();
@@ -1979,10 +1983,12 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
                               value={editNotes}
                               onChange={(e) => setEditNotes(e.target.value)}
                               placeholder="Add notes..."
+                              onKeyDown={(e) => e.key !== 'Enter' || e.shiftKey || e.preventDefault()}
                               className="text-xs border border-slate-300 rounded px-2 py-1 w-32 h-16 resize-none"
                             />
                             <div className="flex gap-1">
                               <button
+                                type="button"
                                 onClick={handleSaveStatus}
                                 disabled={updating}
                                 className="px-2 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700 disabled:opacity-50"
@@ -1990,6 +1996,7 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
                                 {updating ? 'Saving...' : 'Save'}
                               </button>
                               <button
+                                type="button"
                                 onClick={handleCancelEdit}
                                 className="px-2 py-1 bg-slate-300 text-slate-700 text-xs rounded hover:bg-slate-400"
                               >
