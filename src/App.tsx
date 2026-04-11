@@ -1774,6 +1774,7 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
   const [editStatus, setEditStatus] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [updating, setUpdating] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     loadURSData();
@@ -1823,14 +1824,18 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
     }
     if (!editingClient) return;
     setUpdating(true);
+    setSaveSuccess(false);
     try {
       console.log('Saving - recordId:', editingClient, 'status:', editStatus, 'notes:', editNotes);
       const result = await updateClientStatus(editingClient, editStatus, editNotes);
       console.log('API Result:', result);
       if (result.success) {
-        alert(result.message || 'Updated successfully!');
-        loadURSData();
-        setEditingClient(null);
+        setSaveSuccess(true);
+        setTimeout(() => {
+          loadURSData();
+          setEditingClient(null);
+          setSaveSuccess(false);
+        }, 1500);
       } else {
         alert(result.message || 'Failed to update');
       }
@@ -1991,9 +1996,9 @@ function URSDashboardPage({ ursName, onLogout }: { ursName: string; onLogout: ()
                                 type="button"
                                 onClick={handleSaveStatus}
                                 disabled={updating}
-                                className="px-2 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700 disabled:opacity-50"
+                                className={`px-2 py-1 text-white text-xs rounded hover:bg-emerald-700 disabled:opacity-50 ${saveSuccess ? 'bg-green-500' : 'bg-emerald-600'}`}
                               >
-                                {updating ? 'Saving...' : 'Save'}
+                                {updating ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
                               </button>
                               <button
                                 type="button"
